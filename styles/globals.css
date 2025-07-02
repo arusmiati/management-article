@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.ProseMirror{
+    outline: white;
+}
+
+.filter-search-container{
+    border-radius: 10px;
+}
+@layer utilities {
+  .navbar-responsive {
+    @apply bg-transparent sm:bg-white py-4 px-6 flex justify-between items-center relative transition-colors duration-300 z-50 w-full;
+  }
+
+  .header-background {
+    @apply relative pt-24 pb-12 text-center text-white;
+  }
+
+  .header-overlay {
+    @apply absolute inset-0;
+  }
+
+  .header-image {
+    @apply object-cover w-full h-full;
+  }
+
+  .header-overlay-color {
+    @apply absolute inset-0 bg-[#0029FF] opacity-80;
+  }
+
+  .header-content {
+    @apply relative z-10;
+  }
+
+  .filter-search-container {
+    @apply flex flex-col sm:flex-row gap-2 max-w-lg mx-auto px-4 sm:px-0;
+  }
+
+  .filter-search-input {
+    @apply p-2 rounded-md text-black w-full sm:w-auto;
+  }
+
+  .search-button {
+    @apply bg-white text-[#0029FF] px-4 py-2 rounded-md font-medium w-full sm:w-auto;
+  }
+}
