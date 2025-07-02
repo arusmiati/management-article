@@ -46,17 +46,32 @@ export default function CreateOrEditArticlePage() {
   }, [])
 
   useEffect(() => {
-    if (!isEditMode) return
-    api.get(`/articles/${articleId}`)
-      .then(res => {
-        const { title, content, imageUrl, category } = res.data
-        setTitle(title)
-        setContent(content)
-        setCategoryId(category?.id || "")
-        setUploadedImageUrl(imageUrl)
-        setThumbnailPreview(imageUrl)
-      })
-      .catch(console.error)
+    if (isEditMode) {
+      api.get(`/articles/${articleId}`)
+        .then(res => {
+          const { title, content, imageUrl, category } = res.data
+          setTitle(title)
+          setContent(content)
+          setCategoryId(category?.id || "")
+          setUploadedImageUrl(imageUrl)
+          setThumbnailPreview(imageUrl)
+        })
+        .catch(console.error)
+    } else {
+      const stored = sessionStorage.getItem("preview-article")
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          setTitle(parsed.title || "")
+          setContent(parsed.content || "")
+          setCategoryId(parsed.categoryId || "")
+          setThumbnailPreview(parsed.thumbnail || "")
+          setUploadedImageUrl(parsed.thumbnail || "")
+        } catch {
+          console.warn("Invalid preview data")
+        }
+      }
+    }
   }, [articleId, isEditMode])
 
   const chooseFile = () => fileRef.current?.click()
@@ -110,6 +125,7 @@ export default function CreateOrEditArticlePage() {
         await api.post("/articles", payload, cfg)
       }
 
+      sessionStorage.removeItem("preview-article")
       router.push("/admin/articles")
     } catch (err: any) {
       console.error(err)
@@ -122,7 +138,6 @@ export default function CreateOrEditArticlePage() {
   return (
     <div className="flex">
       <Sidebar />
-
       <div className="flex-1 ml-64">
         <Navbar />
 
@@ -181,10 +196,11 @@ export default function CreateOrEditArticlePage() {
               </Field>
 
               <Field label="Content">
-                <TextEditor content={content} onChange={setContent} />
+                <div className="whitespace-pre-wrap">
+                  <TextEditor content={content} onChange={setContent} />
+                </div>
               </Field>
 
-              {/* Submit Buttons */}
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"
@@ -195,14 +211,23 @@ export default function CreateOrEditArticlePage() {
                   Cancel
                 </Button>
 
-                {/* <Button
+                <Button
                   type="button"
                   variant="outline"
-                  onClick={() => router.push("/admin/articles/preview")}
+                  onClick={() => {
+                    const previewData = {
+                      title,
+                      content,
+                      categoryId,
+                      thumbnail: thumbnailPreview || uploadedImageUrl
+                    }
+                    sessionStorage.setItem("preview-article", JSON.stringify(previewData))
+                    router.push("/admin/articles/preview")
+                  }}
                   className="text-blue-600 border-blue-600 hover:bg-blue-50"
                 >
                   Preview
-                </Button> */}
+                </Button>
 
                 <Button
                   onClick={handleSubmit}
@@ -220,7 +245,7 @@ export default function CreateOrEditArticlePage() {
   )
 }
 
-// Sub-components
+// Subcomponents
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (

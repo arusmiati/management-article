@@ -1,15 +1,14 @@
 'use client'
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import TextAlign from "@tiptap/extension-text-align"
 import Image from "@tiptap/extension-image"
 import {
-  Bold, Italic, Underline, List, ListOrdered, AlignLeft,
+  Bold, Italic, List, ListOrdered, AlignLeft,
   AlignCenter, AlignRight, AlignJustify, Image as ImageIcon
 } from "lucide-react"
-import { useRef } from "react"
 
 export default function TextEditor({
   content,
@@ -21,20 +20,21 @@ export default function TextEditor({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const editor = useEditor({
+    editable: true,
+    autofocus: true,
     extensions: [
       StarterKit,
       Image,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
     ],
-    content: '', // Set awal kosong, akan diisi setelah editor siap
+    content: '',
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
   })
 
-  // ✅ Sinkronkan konten saat editor siap
   useEffect(() => {
-    if (editor && content) {
+    if (editor && content && editor.getHTML() === '<p></p>') {
       editor.commands.setContent(content)
     }
   }, [editor, content])
@@ -56,30 +56,17 @@ export default function TextEditor({
 
   return (
     <div className="border rounded-md">
-      {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 p-2 border-b bg-gray-50">
-        <button
-          onClick={() => editor?.chain().focus().toggleBold().run()}
-          className={editor?.isActive('bold') ? 'text-blue-600' : ''}
-        >
+        <button onClick={() => editor?.chain().focus().toggleBold().run()} className={editor?.isActive('bold') ? 'text-blue-600' : ''}>
           <Bold className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => editor?.chain().focus().toggleItalic().run()}
-          className={editor?.isActive('italic') ? 'text-blue-600' : ''}
-        >
+        <button onClick={() => editor?.chain().focus().toggleItalic().run()} className={editor?.isActive('italic') ? 'text-blue-600' : ''}>
           <Italic className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          className={editor?.isActive('bulletList') ? 'text-blue-600' : ''}
-        >
+        <button onClick={() => editor?.chain().focus().toggleBulletList().run()} className={editor?.isActive('bulletList') ? 'text-blue-600' : ''}>
           <List className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-          className={editor?.isActive('orderedList') ? 'text-blue-600' : ''}
-        >
+        <button onClick={() => editor?.chain().focus().toggleOrderedList().run()} className={editor?.isActive('orderedList') ? 'text-blue-600' : ''}>
           <ListOrdered className="w-4 h-4" />
         </button>
         <button onClick={() => editor?.chain().focus().setTextAlign('left').run()}>
@@ -109,9 +96,11 @@ export default function TextEditor({
         />
       </div>
 
-      {/* Editor Content */}
       <div className="min-h-[200px] p-4">
-        <EditorContent editor={editor} className="prose max-w-none" />
+        <EditorContent
+          editor={editor}
+          className="prose max-w-none outline-none whitespace-pre-wrap"
+        />
       </div>
     </div>
   )

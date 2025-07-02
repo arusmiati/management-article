@@ -17,17 +17,24 @@ interface Article {
   content: string
 }
 
+interface Category {
+  id: string
+  name: string
+}
+
 export default function AdminDashboard() {
   const [articles, setArticles] = useState<Article[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [filtered, setFiltered] = useState<Article[]>([])
-
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
-  const totalPages = Math.ceil(filtered.length / itemsPerPage)
+  const [totalItems, setTotalItems] = useState(0)
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
   const paginatedData = filtered.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -36,14 +43,31 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const res = await api.get('/articles')
+        const res = await api.get('/articles', {
+          params: {
+            page: currentPage,
+            limit: itemsPerPage,
+          },
+        })
         setArticles(res.data?.data || [])
+        setTotalItems(res.data?.total || 0)
       } catch (err) {
         console.error('Gagal memuat artikel', err)
       }
     }
+
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get('/categories')
+        setCategories(res.data?.data || res.data)
+      } catch (err) {
+        console.error('Gagal memuat kategori', err)
+      }
+    }
+
     fetchArticles()
-  }, [])
+    fetchCategories()
+  }, [currentPage])
 
   useEffect(() => {
     const q = search.toLowerCase()
@@ -63,6 +87,7 @@ export default function AdminDashboard() {
     try {
       await api.delete(`/articles/${deleteId}`)
       setArticles((prev) => prev.filter((a) => a.id !== deleteId))
+      setTotalItems((prev) => prev - 1)
     } catch (err) {
       console.error('Gagal menghapus artikel', err)
     } finally {
@@ -74,13 +99,12 @@ export default function AdminDashboard() {
   return (
     <div className="flex min-h-screen bg-[#F9FAFB]">
       <Sidebar />
-      <main className="flex-1 ml-64">
+      <main className="flex-1 transition-all duration-300 ease-in-out md:ml-64">
         <Navbar />
         <div className="p-6 max-w-7xl mx-auto">
           <div className="bg-white rounded border border-gray-200">
             <div className="flex justify-between items-center px-6 pt-6">
-              <h2 className="text-lg font-semibold ">Total Articles : {filtered.length}</h2>
-              
+              <h2 className="text-lg font-semibold">Total Articles: {totalItems}</h2>
             </div>
 
             <hr className="my-4 border-gray-200" />
@@ -89,13 +113,16 @@ export default function AdminDashboard() {
               <div className="flex gap-4 items-center flex-wrap">
                 <select
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value)
+                    setCurrentPage(1)
+                  }}
                   className="border border-gray-300 rounded px-3 py-2 text-sm"
                 >
                   <option value="">Category</option>
-                  {[...new Set(articles.map((a) => a.category.name))].map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>
+                      {cat.name}
                     </option>
                   ))}
                 </select>
@@ -109,8 +136,6 @@ export default function AdminDashboard() {
                   }}
                   className="border border-gray-300 rounded px-3 py-2 text-sm w-64"
                 />
-                
-                
               </div>
               <Link
                 href="/admin/articles/create"
@@ -196,7 +221,9 @@ export default function AdminDashboard() {
                     key={n}
                     onClick={() => setCurrentPage(n)}
                     className={`px-3 py-1 rounded ${
-                      currentPage === n ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'
+                      currentPage === n
+                        ? 'bg-blue-600 text-white'
+                        : 'hover:bg-gray-100'
                     }`}
                   >
                     {n}
@@ -205,7 +232,9 @@ export default function AdminDashboard() {
               </div>
               <button
                 className="px-3 py-1 rounded hover:bg-gray-100 disabled:opacity-50"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
               >
                 Next ›
@@ -214,7 +243,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* DELETE MODAL */}
+        {/* Delete Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 text-left">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/services/api'
+import { Eye, EyeOff } from 'lucide-react'
 
 interface UserProfile {
   username: string
@@ -13,6 +14,8 @@ interface UserProfile {
 export default function UserProfilePage() {
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -25,6 +28,11 @@ export default function UserProfilePage() {
     }
 
     fetchProfile()
+  }, [])
+
+  useEffect(() => {
+    const stored = localStorage.getItem('password')
+      if (stored) setPassword(stored) 
   }, [])
 
   if (!profile) {
@@ -51,7 +59,24 @@ export default function UserProfilePage() {
           </div>
           <div className="flex justify-between text-left bg-gray-50 p-3 rounded-md border">
             <span className="text-gray-500 w-1/3">Password</span>
-            <span className="w-2/3 text-right font-medium">*********</span>
+            <div className="w-2/3 flex items-center justify-end gap-2">
+              <input 
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  readOnly
+                   className="bg-transparent text-right font-medium outline-none w-full"
+               />
+              <button
+                type='button'
+                onClick={() => setShowPassword(!showPassword)}
+                className='text-gray-500'>
+                  {showPassword ? (
+                    <EyeOff className='w-4 h-4' />
+                  ) : (
+                    <Eye className='w-4 h-4' />
+                  )}
+              </button>
+            </div>
           </div>
           <div className="flex justify-between text-left bg-gray-50 p-3 rounded-md border">
             <span className="text-gray-500 w-1/3">Role</span>
@@ -61,7 +86,7 @@ export default function UserProfilePage() {
 
         <button
           className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
-          onClick={() => router.push('/user/articles')}
+          onClick={() => router.push('/admin/articles')}
         >
           Back to Home
         </button>

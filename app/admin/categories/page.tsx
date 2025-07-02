@@ -20,20 +20,25 @@ export default function CategoryPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
-  const [filtered, setFiltered] = useState<Category[]>([])
-
+  const [totalItems, setTotalItems] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
-  const totalPages = Math.ceil(filtered.length / itemsPerPage)
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
 
   const fetchData = async () => {
     try {
-      const res = await api.get('/categories')
-      setCategories(res.data?.data || [])
+      const res = await api.get('/categories', {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          sort: 'createdAt:desc',
+        },
+      })
+
+      const data = res.data?.data || []
+      const total = res.data.totalData > 0 ? res.data.totalData : data.length
+
+      setCategories(data)
+      setTotalItems(total)
     } catch (err) {
       console.error('Failed to fetch categories', err)
     }
@@ -41,27 +46,13 @@ export default function CategoryPage() {
 
   useEffect(() => {
     fetchData()
-  }, [])
-
-  useEffect(() => {
-    const q = search.toLowerCase()
-    const result = categories.filter((c) => c.name.toLowerCase().includes(q))
-    setFiltered(result)
-  }, [search, categories])
+  }, [currentPage])
 
   const handleSave = async () => {
     try {
       if (!name.trim()) return alert('Category name is required.')
 
-      const payload: any = { name }
-
-      if (!editId) {
-        const user = localStorage.getItem('user')
-        if (!user) return alert('User not found')
-        const parsed = JSON.parse(user)
-        const userId = parsed.id || parsed.userId
-        payload.userId = userId
-      }
+      const payload = { name }
 
       if (editId) {
         await api.put(`/categories/${editId}`, payload)
@@ -88,13 +79,17 @@ export default function CategoryPage() {
     if (!deleteId) return
     try {
       await api.delete(`/categories/${deleteId}`)
-      setDeleteId(null)
-      setShowDeleteModal(false)
-      fetchData()
+      setCategories((prev) => prev.filter((c) => c.id !== deleteId))
+      setTotalItems((prev) => prev - 1)
     } catch (err) {
       console.error('Failed to delete category', err)
+    } finally {
+      setShowDeleteModal(false)
+      setDeleteId(null)
     }
   }
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
 
   return (
     <div className="flex min-h-screen bg-[#F9FAFB]">
@@ -104,7 +99,23 @@ export default function CategoryPage() {
         <div className="p-6 max-w-7xl mx-auto">
           <div className="bg-white rounded border border-gray-200">
             <div className="flex justify-between items-center px-6 pt-6">
-              <h2 className="text-lg font-semibold">Total Category : {filtered.length}</h2>
+              <h2 className="text-lg font-semibold">Total Categories: {totalItems}</h2>
+              
+            </div>
+
+            <hr className="my-4 border-none" />
+
+            <div className="flex justify-between px-6 flex-wrap items-center gap-4 mb-4">
+              <input
+                type="text"
+                placeholder="Search by name"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="border border-gray-300 rounded px-3 py-2 text-sm w-64"
+              />
               <button
                 onClick={() => setModalOpen(true)}
                 className="flex items-center gap-2 bg-[#0029FF] text-white px-4 py-2 rounded-md hover:bg-blue-700"
@@ -112,18 +123,6 @@ export default function CategoryPage() {
                 <Plus className="w-4 h-4" />
                 Add Category
               </button>
-            </div>
-
-            <hr className="my-4 border-gray-200" />
-
-            <div className="flex justify-between px-6 flex-wrap items-center gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Search by title"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 text-sm w-64"
-              />
             </div>
 
             <div className="overflow-auto">
@@ -136,7 +135,7 @@ export default function CategoryPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedData.map((c) => (
+                  {categories.map((c) => (
                     <tr key={c.id} className="border-t hover:bg-gray-50">
                       <td className="p-4">{c.name}</td>
                       <td className="p-4">{new Date(c.createdAt).toLocaleString()}</td>
@@ -163,6 +162,7 @@ export default function CategoryPage() {
               </table>
             </div>
 
+            {/* Pagination */}
             <div className="flex justify-center items-center p-4 border-t text-sm text-gray-700 mt-4 gap-4">
               <button
                 className="px-3 py-1 rounded hover:bg-gray-100 disabled:opacity-50"
@@ -195,7 +195,7 @@ export default function CategoryPage() {
           </div>
         </div>
 
-        {/* Modal Add/Edit */}
+        {/* Add/Edit Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-sm">
@@ -231,7 +231,7 @@ export default function CategoryPage() {
           </div>
         )}
 
-        {/* Modal Delete */}
+        {/* Delete Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-sm">
