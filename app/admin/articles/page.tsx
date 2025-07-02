@@ -47,6 +47,7 @@ export default function AdminDashboard() {
           params: {
             page: currentPage,
             limit: itemsPerPage,
+            sort: 'createdAt:desc',
           },
         })
         setArticles(res.data?.data || [])
@@ -113,10 +114,7 @@ export default function AdminDashboard() {
               <div className="flex gap-4 items-center flex-wrap">
                 <select
                   value={selectedCategory}
-                  onChange={(e) => {
-                    setSelectedCategory(e.target.value)
-                    setCurrentPage(1)
-                  }}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
                   className="border border-gray-300 rounded px-3 py-2 text-sm"
                 >
                   <option value="">Category</option>
@@ -174,9 +172,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="p-4 w-1/4">{a.title}</td>
                       <td className="p-4">{a.category.name}</td>
-                      <td className="p-4">
-                        {new Date(a.createdAt).toLocaleString()}
-                      </td>
+                      <td className="p-4">{new Date(a.createdAt).toLocaleString()}</td>
                       <td className="p-4 space-x-2 whitespace-nowrap">
                         <Link
                           href={`/admin/articles/preview/${a.id}`}
@@ -206,7 +202,6 @@ export default function AdminDashboard() {
               </table>
             </div>
 
-            {/* Pagination */}
             <div className="flex justify-center items-center p-4 border-t text-sm text-gray-700 mt-4 gap-4">
               <button
                 className="px-3 py-1 rounded hover:bg-gray-100 disabled:opacity-50"
@@ -221,9 +216,7 @@ export default function AdminDashboard() {
                     key={n}
                     onClick={() => setCurrentPage(n)}
                     className={`px-3 py-1 rounded ${
-                      currentPage === n
-                        ? 'bg-blue-600 text-white'
-                        : 'hover:bg-gray-100'
+                      currentPage === n ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'
                     }`}
                   >
                     {n}
@@ -232,9 +225,7 @@ export default function AdminDashboard() {
               </div>
               <button
                 className="px-3 py-1 rounded hover:bg-gray-100 disabled:opacity-50"
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
               >
                 Next ›
@@ -243,7 +234,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Delete Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 text-left">
@@ -251,8 +241,7 @@ export default function AdminDashboard() {
                 Delete Article
               </h2>
               <p className="text-sm text-gray-700 mb-6">
-                Are you sure you want to delete this article? This action cannot
-                be undone.
+                Are you sure you want to delete this article? This action cannot be undone.
               </p>
               <div className="flex justify-end gap-3">
                 <button

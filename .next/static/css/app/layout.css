@@ -1148,12 +1148,6 @@ video {
 .top-4 {
   top: 1rem;
 }
-.bottom-4 {
-  bottom: 1rem;
-}
-.right-4 {
-  right: 1rem;
-}
 .z-10 {
   z-index: 10;
 }
@@ -1555,9 +1549,6 @@ video {
 .object-cover {
   -o-object-fit: cover;
      object-fit: cover;
-}
-.p-0 {
-  padding: 0px;
 }
 .p-2 {
   padding: 0.5rem;
