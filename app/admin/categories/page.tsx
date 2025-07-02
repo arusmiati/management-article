@@ -99,7 +99,7 @@ export default function CategoryPage() {
   return (
     <div className="flex min-h-screen bg-[#F9FAFB]">
       <Sidebar />
-      <main className="flex-1">
+      <main className="flex-1 ml-64">
         <Navbar />
         <div className="p-6 max-w-7xl mx-auto">
           <div className="bg-white rounded border border-gray-200">
