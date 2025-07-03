@@ -1,8 +1,8 @@
 {
-  "/user/articles/[id]/page": "app/user/articles/[id]/page.js",
   "/login/page": "app/login/page.js",
-  "/admin/profile/page": "app/admin/profile/page.js",
   "/admin/articles/page": "app/admin/articles/page.js",
   "/user/profile/page": "app/user/profile/page.js",
-  "/admin/categories/page": "app/admin/categories/page.js"
+  "/admin/profile/page": "app/admin/profile/page.js",
+  "/admin/categories/page": "app/admin/categories/page.js",
+  "/register/page": "app/register/page.js"
 }
