@@ -14,6 +14,17 @@ export default function Navbar() {
   const router = useRouter()
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   useEffect(() => {
     const user = localStorage.getItem('user')
     if (user) {
@@ -38,30 +49,28 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-white text-black sm:bg-transparent sm:text-white py-4 px-6 flex justify-between items-center">
-        <Link href="/">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/assets/logo3.png"
-              alt="Logo Desktop"
-              width={120}
-              height={120}
-              className="hidden sm:block"
-            />
-            <Image
-              src="/assets/logo.png"
-              alt="Logo Mobile"
-              width={100}
-              height={100}
-              className="block sm:hidden"
-            />
-          </div>
-        </Link>
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 py-4 px-6 flex justify-between items-center ${
+          scrolled
+            ? 'bg-white text-black shadow-md'
+            : 'bg-transparent text-white'
+        }`}
+      >
+          <div className="flex items-center gap-2 transition-all duration-300">
+  <Image
+    src={scrolled ? '/assets/logo2.png' : '/assets/logo3.png'}
+    alt="Logo"
+    width={120}
+    height={120}
+    className="transition-all duration-300"
+  />
+</div>
+
 
         <div className="relative" ref={dropdownRef}>
           {username ? (
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setDropdownOpen(!dropdownOpen)}>
-              <div className="w-8 h-8 bg-blue-600 text-white flex justify-center items-center rounded-full text-sm">
+              <div className="w-8 h-8 bg-[#8bcef3] flex justify-center items-center rounded-full text-sm" style={{ color: '#005ac3' }}>
                 {getInitial(username)}
               </div>
               <span className="font-medium text-sm">{username}</span>

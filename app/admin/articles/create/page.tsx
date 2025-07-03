@@ -38,12 +38,15 @@ export default function CreateOrEditArticlePage() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    api.get("/categories")
-      .then(res => setCategories(res.data.data || res.data))
-      .catch(console.error)
+    api.get("/categories", {
+      params: { page: 1, limit: 1000 },
+    })
+    .then((res) => setCategories(res.data.data || res.data))
+    .catch(console.error)
 
     api.get("/auth/profile").catch(console.error)
   }, [])
+
 
   useEffect(() => {
     if (isEditMode) {
@@ -136,12 +139,11 @@ export default function CreateOrEditArticlePage() {
   }
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen">
       <Sidebar />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 transition-all duration-300 ease-in-out md:ml-64">
         <Navbar />
-
-        <div className="mt-6 px-4 md:px-8">
+        <div className="mt-6 px-4 md:px-8 ">
           <div className="p-6 max-w-7xl mx-auto border border-[0.5px] border-gray-300 rounded-md bg-white shadow-sm">
             <header className="flex items-center gap-2 mb-8">
               <Button variant="ghost" onClick={router.back}>

@@ -38,7 +38,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="top-0 left-0 w-full z-50 transition-all duration-300 bg-none text-black py-4 px-6 flex justify-between items-center ">
+      <nav className="sticky top-0 left-0 w-full z-50 transition-all duration-300 bg-none text-black py-4 px-6 flex justify-between items-center ">
           <Link href="/">
           <div className="flex items-center gap-2">
             <Image
@@ -54,7 +54,7 @@ export default function Navbar() {
         <div className="relative" ref={dropdownRef}>
           {username ? (
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setDropdownOpen(!dropdownOpen)}>
-              <div className="w-8 h-8 bg-blue-600 flex text-white justify-center items-center rounded-full text-sm">
+              <div className="w-8 h-8 bg-[#8bcef3] flex justify-center items-center rounded-full text-sm" style={{ color: '#005ac3' }}>
                 {getInitial(username)}
               </div>
               <span className="font-medium text-sm">{username}</span>

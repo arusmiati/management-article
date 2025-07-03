@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '@/services/api'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 
-// ✅ Enum role literal
 const schema = z.object({
   username: z.string().min(1, { message: 'Username field cannot be empty' }),
   password: z
@@ -30,12 +29,17 @@ export default function RegisterPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [animate, setAnimate] = useState(false)
 
   const {
     register,
     handleSubmit,
     formState: { errors }
   } = useForm<FormData>({ resolver: zodResolver(schema) })
+
+  useEffect(() => {
+    setTimeout(() => setAnimate(true), 100)
+  }, [])
 
   const onSubmit = async (data: FormData) => {
     setLoading(true)
@@ -52,16 +56,30 @@ export default function RegisterPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
-      <Card className="w-full max-w-md p-6 shadow-xl">
+      <Card
+        className={`w-full max-w-md p-6 shadow-2xl transform transition-all duration-700 ${
+          animate ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+        }`}
+      >
         <CardContent>
-          <div className="flex justify-center mb-4">
-            <img src="/assets/logo2.png" alt="Logo" width={150} />
+          <div className="flex justify-center mb-6">
+            <img
+              src="/assets/logo2.png"
+              alt="Logo"
+              width={150}
+              className="transition-transform duration-500 hover:scale-105"
+            />
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-left">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 text-left">
             <div>
               <Label htmlFor="username">Username</Label>
-              <Input id="username" type="text" {...register('username')} />
+              <Input
+                id="username"
+                type="text"
+                {...register('username')}
+                className="transition-all duration-200 focus:ring-2 focus:ring-blue-300"
+              />
               {errors.username && (
                 <p className="text-sm text-red-500 mt-1">{errors.username.message}</p>
               )}
@@ -69,7 +87,12 @@ export default function RegisterPage() {
 
             <div>
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" {...register('password')} />
+              <Input
+                id="password"
+                type="password"
+                {...register('password')}
+                className="transition-all duration-200 focus:ring-2 focus:ring-blue-300"
+              />
               {errors.password && (
                 <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
               )}
@@ -80,7 +103,7 @@ export default function RegisterPage() {
               <select
                 id="role"
                 {...register('role')}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
               >
                 <option value="">Select role</option>
                 <option value="User">User</option>
@@ -95,14 +118,21 @@ export default function RegisterPage() {
               <p className="text-sm text-red-600 text-center">{errorMessage}</p>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full transition-all duration-300 hover:scale-105"
+              disabled={loading}
+            >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Register'}
             </Button>
           </form>
 
-          <p className="text-center mt-4 text-sm">
+          <p className="text-center mt-6 text-sm">
             Already have an account?{' '}
-            <a href="/login" className="text-blue-600 hover:underline">
+            <a
+              href="/login"
+              className="text-blue-600 hover:underline transition-all duration-200"
+            >
               Login
             </a>
           </p>

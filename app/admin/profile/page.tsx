@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/services/api'
 import { Eye, EyeOff } from 'lucide-react'
+import withAuth from '@/middlewares/withAuth'
 
 interface UserProfile {
   username: string
@@ -11,7 +12,7 @@ interface UserProfile {
   role: string
 }
 
-export default function UserProfilePage() {
+function UserProfilePage() {
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [password, setPassword] = useState('')
@@ -23,7 +24,7 @@ export default function UserProfilePage() {
         const res = await api.get('/auth/profile')
         setProfile(res.data)
       } catch (err) {
-        console.error('❌ Gagal ambil data profil:', err)
+        console.error('❌ Failed to fetch profile data:', err)
       }
     }
 
@@ -32,13 +33,13 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     const stored = localStorage.getItem('password')
-      if (stored) setPassword(stored) 
+    if (stored) setPassword(stored)
   }, [])
 
   if (!profile) {
     return (
       <div className="min-h-screen flex justify-center items-center">
-        <p className="text-gray-500">Memuat profil...</p>
+        <p className="text-gray-500">Loading profile...</p>
       </div>
     )
   }
@@ -60,21 +61,22 @@ export default function UserProfilePage() {
           <div className="flex justify-between text-left bg-gray-50 p-3 rounded-md border">
             <span className="text-gray-500 w-1/3">Password</span>
             <div className="w-2/3 flex items-center justify-end gap-2">
-              <input 
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  readOnly
-                   className="bg-transparent text-right font-medium outline-none w-full"
-               />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                readOnly
+                className="bg-transparent text-right font-medium outline-none w-full"
+              />
               <button
-                type='button'
+                type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className='text-gray-500'>
-                  {showPassword ? (
-                    <EyeOff className='w-4 h-4' />
-                  ) : (
-                    <Eye className='w-4 h-4' />
-                  )}
+                className="text-gray-500"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
@@ -94,3 +96,5 @@ export default function UserProfilePage() {
     </div>
   )
 }
+
+export default withAuth(UserProfilePage, ['Admin'])

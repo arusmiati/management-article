@@ -5,6 +5,7 @@ import { api } from '@/services/api'
 import { Plus } from 'lucide-react'
 import Sidebar from '@/app/admin/sidebar'
 import Navbar from '@/app/admin/navbar'
+import withAuth from '@/middlewares/withAuth'
 
 interface Category {
   id: string
@@ -12,7 +13,7 @@ interface Category {
   createdAt: string
 }
 
-export default function CategoryPage() {
+function CategoryPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
@@ -47,6 +48,13 @@ export default function CategoryPage() {
   useEffect(() => {
     fetchData()
   }, [currentPage])
+
+  useEffect(() => {
+    if (editId) {
+      const category = categories.find((c) => c.id === editId)
+      if (category) setName(category.name)
+    }
+  }, [editId])
 
   const handleSave = async () => {
     try {
@@ -94,38 +102,45 @@ export default function CategoryPage() {
   return (
     <div className="flex min-h-screen bg-[#F9FAFB]">
       <Sidebar />
-      <main className="flex-1 ml-64">
+      <main className="flex-1 transition-all duration-300 ease-in-out md:ml-64">
         <Navbar />
         <div className="p-6 max-w-7xl mx-auto">
           <div className="bg-white rounded border border-gray-200">
-            <div className="flex justify-between items-center px-6 pt-6">
+            <div className="flex justify-between items-center px-6 pt-6 flex-wrap gap-4">
               <h2 className="text-lg font-semibold">Total Categories: {totalItems}</h2>
-              
             </div>
 
-            <hr className="my-4 border-none" />
+            <hr className="my-4 border-gray-200" />
 
-            <div className="flex justify-between px-6 flex-wrap items-center gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Search by name"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="border border-gray-300 rounded px-3 py-2 text-sm w-64"
-              />
-              <button
-                onClick={() => setModalOpen(true)}
-                className="flex items-center gap-2 bg-[#0029FF] text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                <Plus className="w-4 h-4" />
-                Add Category
-              </button>
+            <div className="flex flex-col sm:flex-row flex-wrap items-center justify-between px-6 gap-4">
+              <div className="flex flex-wrap gap-4 flex-1 min-w-0">
+                <input
+                  type="text"
+                  placeholder="Search by name"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value)
+                    setCurrentPage(1)
+                  }}
+                  className="w-64 border border-gray-300 rounded px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <button
+                  onClick={() => {
+                    setModalOpen(true)
+                    setEditId(null)
+                    setName('')
+                  }}
+                  className="flex items-center gap-2 bg-[#0029FF] text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Category
+                </button>
+              </div>
             </div>
 
-            <div className="overflow-auto">
+            <div className="overflow-auto mt-6">
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-100 text-gray-600">
                   <tr>
@@ -135,35 +150,33 @@ export default function CategoryPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {categories.map((c) => (
-                    <tr key={c.id} className="border-t hover:bg-gray-50">
-                      <td className="p-4">{c.name}</td>
-                      <td className="p-4">{new Date(c.createdAt).toLocaleString()}</td>
-                      <td className="p-4 space-x-2">
-                        <button
-                          onClick={() => handleEdit(c)}
-                          className="text-blue-600 hover:underline"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => {
-                            setDeleteId(c.id)
-                            setShowDeleteModal(true)
-                          }}
-                          className="text-red-600 hover:underline"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {categories
+                    .filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
+                    .map((c) => (
+                      <tr key={c.id} className="border-t hover:bg-gray-50">
+                        <td className="p-4">{c.name}</td>
+                        <td className="p-4">{new Date(c.createdAt).toLocaleString()}</td>
+                        <td className="p-4 space-x-2">
+                          <button onClick={() => handleEdit(c)} className="text-blue-600 hover:underline">
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDeleteId(c.id)
+                              setShowDeleteModal(true)
+                            }}
+                            className="text-red-600 hover:underline"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Pagination */}
-            <div className="flex justify-center items-center p-4 border-t text-sm text-gray-700 mt-4 gap-4">
+            <div className="flex flex-wrap justify-center items-center p-4 border-t text-sm text-gray-700 mt-4 gap-2 sm:gap-4">
               <button
                 className="px-3 py-1 rounded hover:bg-gray-100 disabled:opacity-50"
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -195,7 +208,7 @@ export default function CategoryPage() {
           </div>
         </div>
 
-        {/* Add/Edit Modal */}
+        {/* Modal Section */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-sm">
@@ -231,7 +244,7 @@ export default function CategoryPage() {
           </div>
         )}
 
-        {/* Delete Modal */}
+        {/* Delete Confirmation Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-sm">
@@ -265,3 +278,5 @@ export default function CategoryPage() {
     </div>
   )
 }
+
+export default withAuth(CategoryPage, ['Admin'])

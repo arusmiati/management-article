@@ -32,30 +32,42 @@ export default function EditArticlePage() {
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
-    api.get("/categories")
-      .then(res => setCategories(res.data.data || res.data))
-      .catch(console.error)
+    const fetchInitialData = async () => {
+      try {
+        // Ambil semua kategori
+        const catRes = await api.get("/categories", {
+          params: { page: 1, limit: 1000 },
+        })
+        setCategories(catRes.data?.data || catRes.data)
 
-    const previewData = sessionStorage.getItem("preview-article")
-    if (previewData) {
-      const { title, content, categoryId, thumbnail } = JSON.parse(previewData)
-      setTitle(title)
-      setContent(content)
-      setCategoryId(categoryId)
-      setThumbnailPreview(thumbnail)
-      setUploadedImageUrl(thumbnail)
-      sessionStorage.removeItem("preview-article")
-    } else {
-      api.get(`/articles/${articleId}`)
-        .then(res => {
+        // Ambil profil
+        await api.get("/auth/profile")
+
+        const previewData = sessionStorage.getItem("preview-article")
+        if (previewData) {
+          const { title, content, categoryId, thumbnail } = JSON.parse(previewData)
+          setTitle(title)
+          setContent(content)
+          setCategoryId(categoryId)
+          setThumbnailPreview(thumbnail)
+          setUploadedImageUrl(thumbnail)
+          sessionStorage.removeItem("preview-article")
+        } else {
+          const res = await api.get(`/articles/${articleId}`)
           const { title, content, imageUrl, category } = res.data
           setTitle(title)
           setContent(content)
           setCategoryId(category?.id || "")
           setUploadedImageUrl(imageUrl)
           setThumbnailPreview(imageUrl)
-        })
-        .catch(console.error)
+        }
+      } catch (err) {
+        console.error("Failed to fetch initial data", err)
+      }
+    }
+
+    if (articleId) {
+      fetchInitialData()
     }
   }, [articleId])
 
@@ -103,7 +115,7 @@ export default function EditArticlePage() {
       const token = localStorage.getItem("token")
       if (!token) throw new Error("Not authenticated")
       await api.put(`/articles/${articleId}`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       })
       router.push("/admin/articles")
     } catch (err: any) {
@@ -115,9 +127,9 @@ export default function EditArticlePage() {
   }
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen">
       <Sidebar />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 transition-all duration-300 ease-in-out md:ml-64">
         <Navbar />
         <div className="mt-6 px-4 md:px-8">
           <div className="p-6 max-w-7xl mx-auto border border-gray-300 rounded-md bg-white shadow-sm">

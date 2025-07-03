@@ -7,6 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Sidebar from '@/app/admin/sidebar'
 import Navbar from '@/app/admin/navbar'
+import withAuth from '@/middlewares/withAuth'
 
 interface Article {
   id: string
@@ -22,19 +23,21 @@ interface Category {
   name: string
 }
 
-export default function AdminDashboard() {
+function ArticlePage() {
   const [articles, setArticles] = useState<Article[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [sortBy, setSortBy] = useState('createdAt')
   const [filtered, setFiltered] = useState<Article[]>([])
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
-  const [totalItems, setTotalItems] = useState(0)
 
+  const itemsPerPage = 9
+  const totalItems = filtered.length
   const totalPages = Math.ceil(totalItems / itemsPerPage)
+
   const paginatedData = filtered.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -43,32 +46,30 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const res = await api.get('/articles', {
-          params: {
-            page: currentPage,
-            limit: itemsPerPage,
-            sort: 'createdAt:desc',
-          },
-        })
+        const res = await api.get('/articles')
         setArticles(res.data?.data || [])
-        setTotalItems(res.data?.total || 0)
       } catch (err) {
-        console.error('Gagal memuat artikel', err)
-      }
-    }
-
-    const fetchCategories = async () => {
-      try {
-        const res = await api.get('/categories')
-        setCategories(res.data?.data || res.data)
-      } catch (err) {
-        console.error('Gagal memuat kategori', err)
+        console.error('Failed to fetch articles:', err)
       }
     }
 
     fetchArticles()
+  }, [])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get('/categories', {
+          params: { page: 1, limit: 1000 },
+        })
+        setCategories(res.data?.data || [])
+      } catch (err) {
+        console.error('Failed to fetch categories:', err)
+      }
+    }
+
     fetchCategories()
-  }, [currentPage])
+  }, [])
 
   useEffect(() => {
     const q = search.toLowerCase()
@@ -80,17 +81,26 @@ export default function AdminDashboard() {
         !selectedCategory || a.category?.name === selectedCategory
       return matchesSearch && matchesCategory
     })
-    setFiltered(result)
-  }, [search, selectedCategory, articles])
+
+    const sorted = [...result].sort((a, b) => {
+      if (sortBy === 'title') {
+        return a.title.localeCompare(b.title)
+      } else {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      }
+    })
+
+    setFiltered(sorted)
+    setCurrentPage(1)
+  }, [search, selectedCategory, articles, sortBy])
 
   const handleDelete = async () => {
     if (!deleteId) return
     try {
       await api.delete(`/articles/${deleteId}`)
       setArticles((prev) => prev.filter((a) => a.id !== deleteId))
-      setTotalItems((prev) => prev - 1)
     } catch (err) {
-      console.error('Gagal menghapus artikel', err)
+      console.error('Failed to delete article:', err)
     } finally {
       setShowDeleteModal(false)
       setDeleteId(null)
@@ -104,55 +114,68 @@ export default function AdminDashboard() {
         <Navbar />
         <div className="p-6 max-w-7xl mx-auto">
           <div className="bg-white rounded border border-gray-200">
-            <div className="flex justify-between items-center px-6 pt-6">
+            <div className="flex justify-between items-center px-6 pt-6 flex-wrap gap-4">
               <h2 className="text-lg font-semibold">Total Articles: {totalItems}</h2>
+              <div className="flex gap-2 items-center">
+                <label htmlFor="sortBy" className="text-sm">Sort by:</label>
+                <select
+                  id="sortBy"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="border border-gray-300 rounded px-2 py-1 text-sm"
+                >
+                  <option value="createdAt">Created At (Newest)</option>
+                  <option value="title">Title (A-Z)</option>
+                </select>
+              </div>
             </div>
 
             <hr className="my-4 border-gray-200" />
 
-            <div className="flex justify-between px-6 flex-wrap items-center gap-4">
-              <div className="flex gap-4 items-center flex-wrap">
+            <div className="flex flex-wrap items-center justify-between px-6 gap-4">
+              <div className="flex flex-wrap gap-4 flex-1 min-w-0">
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm"
+                  className="w-64 border border-gray-300 rounded px-3 py-2 text-sm"
                 >
-                  <option value="">Category</option>
+                  <option value="">All Categories</option>
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name}>
+                    <option key={cat.id} value={cat.name} title={cat.name}>
                       {cat.name}
                     </option>
                   ))}
                 </select>
+
                 <input
                   type="text"
                   placeholder="Search by title"
                   value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value)
-                    setCurrentPage(1)
-                  }}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm w-64"
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-64 border border-gray-300 rounded px-3 py-2 text-sm"
                 />
               </div>
-              <Link
-                href="/admin/articles/create"
-                className="flex items-center gap-2 bg-[#0029FF] text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                <Plus className="w-4 h-4" />
-                Add Articles
-              </Link>
+
+              <div>
+                <Link
+                  href="/admin/articles/create"
+                  className="flex items-center gap-2 bg-[#0029FF] text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Article
+                </Link>
+              </div>
             </div>
 
             <div className="overflow-auto mt-6">
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-100 text-gray-600">
                   <tr>
-                    <th className="p-4">Thumbnails</th>
+                    <th className="p-4">Thumbnail</th>
                     <th className="p-4">Title</th>
                     <th className="p-4">Category</th>
-                    <th className="p-4">Created at</th>
-                    <th className="p-4">Action</th>
+                    <th className="p-4">Created At</th>
+                    <th className="p-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -161,7 +184,7 @@ export default function AdminDashboard() {
                       <td className="p-4">
                         <div className="relative w-12 h-12">
                           <Image
-                            src={a.imageUrl || '/placeholder.jpg'}
+                            src={a.imageUrl || '/assets/default.jpg'}
                             alt="thumbnail"
                             fill
                             sizes="48px"
@@ -267,3 +290,5 @@ export default function AdminDashboard() {
     </div>
   )
 }
+
+export default withAuth(ArticlePage, ['Admin'])

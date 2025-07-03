@@ -54,7 +54,7 @@ export default function Navbar() {
         <div className="relative" ref={dropdownRef}>
           {username ? (
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setDropdownOpen(!dropdownOpen)}>
-              <div className="w-8 h-8 bg-blue-600 flex text-white justify-center items-center rounded-full text-sm">
+              <div className="w-8 h-8 bg-[#8bcef3] flex justify-center items-center rounded-full text-sm" style={{ color: '#005ac3' }}>
                 {getInitial(username)}
               </div>
               <span className="font-medium text-sm">{username}</span>

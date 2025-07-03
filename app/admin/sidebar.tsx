@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
-import { LayoutGrid, FolderKanban, LogOut, Menu, X } from 'lucide-react'
+import { FileText, LogOut, Tag, Menu, X } from 'lucide-react'
 import clsx from 'clsx'
 import { useState, useEffect } from 'react'
 import Logout from '@/app/admin/logout'
@@ -24,8 +24,8 @@ export default function Sidebar() {
   }, [])
 
   const navItems = [
-    { label: 'Articles', icon: <LayoutGrid />, path: '/admin/articles' },
-    { label: 'Category', icon: <FolderKanban />, path: '/admin/categories' },
+    { label: 'Articles', icon: <FileText />, path: '/admin/articles' },
+    { label: 'Category', icon: <Tag />, path: '/admin/categories' },
   ]
 
   const handleConfirmLogout = () => {
@@ -69,7 +69,6 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Sidebar - Now always rendered, hidden with translate */}
       <aside
         className={clsx(
           "fixed top-0 left-0 w-64 h-screen bg-[#0029FF] text-white px-6 py-6 z-40 transition-transform duration-300",
@@ -78,6 +77,9 @@ export default function Sidebar() {
             "-translate-x-full": isMobile && !isSidebarOpen,
           }
         )}
+        style={{
+          height:'-webkit-fill-available'
+        }}
       >
         <div className="text-2xl font-bold mb-10">
           <img src="/assets/logo3.png" alt="Website Logo" />
@@ -93,7 +95,7 @@ export default function Sidebar() {
               className={clsx(
                 "flex items-center gap-3 w-full px-4 py-2 rounded-md transition",
                 pathname.startsWith(item.path)
-                  ? "bg-blue-900/70"
+                  ? "bg-sky-500/70"
                   : "hover:bg-blue-900/40"
               )}
             >

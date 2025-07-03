@@ -8,6 +8,9 @@ module.exports = {
         'fade-in-up': 'fadeInUp 1s ease-out',
         'slide-up': 'slideUp 1s ease-out',
       },
+      fontFamily: {
+        sans: ['Poppins', 'sans-serif'],
+      },
       keyframes: {
         fadeIn: {
           '0%': { opacity: 0 },

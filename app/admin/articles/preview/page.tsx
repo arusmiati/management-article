@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react'
 import Navbar from '@/components/Navbar2'
 import Footer from '@/components/Footer'
 import { api } from '@/services/api'
+import withAuth from '@/middlewares/withAuth'
 
 interface PreviewData {
   id?: string
@@ -17,7 +18,7 @@ interface PreviewData {
   source: 'create' | 'edit'
 }
 
-export default function ArticlePreview() {
+function ArticlePreview() {
   const [article, setArticle] = useState<PreviewData | null>(null)
   const [loading, setLoading] = useState(true)
   const [categoryName, setCategoryName] = useState<string>('Uncategorized')
@@ -68,14 +69,14 @@ export default function ArticlePreview() {
     try {
       const token = localStorage.getItem('token')
       const config = {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       }
 
       const payload = {
         title: article.title,
         content: article.content,
         categoryId: article.categoryId,
-        imageUrl: article.thumbnail
+        imageUrl: article.thumbnail,
       }
 
       await api.post('/articles', payload, config)
@@ -83,7 +84,7 @@ export default function ArticlePreview() {
       router.push('/admin/articles')
     } catch (err) {
       console.error('❌ Failed to submit article:', err)
-      alert('Gagal submit artikel.')
+      alert('Failed to submit article.')
     } finally {
       setSubmitting(false)
     }
@@ -102,6 +103,7 @@ export default function ArticlePreview() {
       <Navbar />
 
       <main className="flex-grow">
+        {/* Back Button */}
         <div className="max-w-4xl mx-auto px-4 pt-6 flex justify-between items-center">
           <button
             onClick={handleBack}
@@ -111,17 +113,23 @@ export default function ArticlePreview() {
           </button>
         </div>
 
+        {/* Header */}
         <div className="max-w-3xl mx-auto px-4 pt-12 text-center">
-          <h2 className="text-sm text-[#6B7280] uppercase font-medium mb-2 tracking-wider">{categoryName}</h2>
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">{article.title}</h1>
+          <h2 className="text-sm text-[#6B7280] uppercase font-medium mb-2 tracking-wider">
+            {categoryName}
+          </h2>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
+            {article.title}
+          </h1>
           <p className="text-sm text-gray-500">Draft Preview • Just Now</p>
         </div>
 
+        {/* Thumbnail */}
         {article.thumbnail && (
           <div className="max-w-4xl mx-auto px-4 py-10">
             <div className="relative w-full h-64 sm:h-[400px] rounded-xl overflow-hidden shadow-md">
               <Image
-                src={article.thumbnail}
+                src={article.thumbnail || '/assets/default.jpg'}
                 alt="cover"
                 fill
                 className="object-cover"
@@ -130,15 +138,31 @@ export default function ArticlePreview() {
           </div>
         )}
 
+        {/* Content */}
         <div className="max-w-3xl mx-auto px-4 pb-16">
           <div
             className="prose prose-lg max-w-none text-gray-800 prose-headings:mt-8 prose-p:mt-4 text-justify"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
         </div>
+
+        {/* Submit Button */}
+        {article.source === 'create' && (
+          <div className="max-w-3xl mx-auto px-4 pb-12 text-center">
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {submitting ? 'Submitting...' : 'Submit Article'}
+            </button>
+          </div>
+        )}
       </main>
 
       <Footer />
     </div>
   )
 }
+
+export default withAuth(ArticlePreview, ['Admin'])
