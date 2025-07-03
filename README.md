@@ -50,8 +50,6 @@ Website manajemen artikel dengan dua role (User dan Admin). User dapat membaca d
 ## 🚀 Cara Menjalankan Project
 
 1. **Clone repository**
-
-```bash
 git clone https://github.com/yourusername/project-name.git
 cd project-name
 
